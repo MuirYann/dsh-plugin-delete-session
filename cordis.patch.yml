@@ -1,0 +1,12 @@
+# dsh-session-delete bundle patch: one loader row mounting this package's host half.
+#
+# It lives in the package rather than in the profile's cordis.patch.yml so the
+# plugin behaves like every other profile bundle: the Plugins page lists it as an
+# installed package with its own enable switch, and uninstalling or updating it
+# never has to touch the profile's own patch layer.
+#
+# The row carries no pre-existing id to override, so it arrives through a root
+# `insert` — the same shape the shipped bundles use for their own rows.
+- insert:
+    - id: session-delete
+      name: dsh-session-delete

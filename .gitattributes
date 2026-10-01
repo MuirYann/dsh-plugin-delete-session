@@ -1,0 +1,3 @@
+# Normalize line endings so a checkout on any platform produces the same bytes
+# git stores. The sources are plain JavaScript, YAML and Markdown.
+* text=auto eol=lf

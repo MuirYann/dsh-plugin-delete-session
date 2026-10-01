@@ -1,0 +1,13 @@
+# Nothing here is a build input for this plugin: lib/*.js are hand-written
+# sources shipped as-is, so there is no dist/ to ignore. These entries cover
+# incidental local state only.
+
+node_modules/
+pnpm-lock.yaml
+
+# Editors / OS
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
+*.log
