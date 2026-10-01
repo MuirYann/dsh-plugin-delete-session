@@ -19,8 +19,10 @@ DSH can archive a session but never delete one. `archiveSession` is the only ses
 
 - [Requirements](#requirements)
 - [Install](#install)
-  - [From the in-app dialog](#from-the-in-app-dialog)
-  - [From a local checkout](#from-a-local-checkout)
+  - [1 · From the in-app dialog (recommended)](#1--from-the-in-app-dialog-recommended)
+  - [2 · From the command line](#2--from-the-command-line)
+  - [3 · From a local checkout, by hand](#3--from-a-local-checkout-by-hand)
+  - [After installing — confirm it took](#after-installing--confirm-it-took)
 - [Usage](#usage)
 - [What a delete removes](#what-a-delete-removes)
 - [Safety rules](#safety-rules)
@@ -47,7 +49,7 @@ DSH can archive a session but never delete one. `archiveSession` is the only ses
 
 The plugin installs as a **profile bundle**. That matters: a row written directly into the profile's `cordis.patch.yml` becomes a *ledger item*, which the Plugins page renders inside the **Official** group beside the built-in plugins and which cannot be enabled, configured, or uninstalled on its own. A bundle appears under **Installed** with its own card, switch, and detail page.
 
-### From the in-app dialog
+### 1 · From the in-app dialog (recommended)
 
 Open **Plugins → Add plugin** and paste either form:
 
@@ -56,17 +58,50 @@ github:PotatoOfPotato/dsh-plugin-delete-session
 https://github.com/PotatoOfPotato/dsh-plugin-delete-session
 ```
 
-DSH installs it into the profile, finds `dsh.bundle.patch` in its manifest, and adds it to `dsh.profile.bundles`. **Restart DSH** — profiles compose at startup.
+DSH installs it into the profile, finds `dsh.bundle.patch` in its manifest, and selects it in `dsh.profile.bundles`. **Restart DSH** — profiles compose at startup.
 
-### From a local checkout
+### 2 · From the command line
+
+`dsh plugin` forwards the remaining arguments to pnpm inside the profile directory, so anything pnpm accepts works — a GitHub spec, a registry package, a tarball, or a local path:
+
+```sh
+# from a GitHub repository (recommended for a released plugin)
+dsh plugin --profile <profile> add github:PotatoOfPotato/dsh-plugin-delete-session
+
+# or from a local checkout
+git clone https://github.com/PotatoOfPotato/dsh-plugin-delete-session
+dsh plugin --profile <profile> add link:/absolute/path/to/dsh-plugin-delete-session
+```
+
+`dsh <name>` is shorthand for `dsh --profile <name>`, and the profile may be omitted when only one exists.
+
+This step installs the **dependency**. The bundle also has to be **selected**, which is what actually activates it — `dsh plugin add` does not do that part for you. Either flip it on in **Plugins → Installed** after installing, or add the name to `dsh.profile.bundles` in the profile's `package.json` first:
+
+```json
+{
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "@deepseek-ai/dsh-web-app",
+        "dsh-session-delete"
+      ]
+    }
+  }
+}
+```
+
+**Restart DSH** afterwards.
+
+### 3 · From a local checkout, by hand
+
+Use this when you want the plugin to track a working copy you edit — the profile links to the directory, so a source change is picked up on the next restart.
 
 ```sh
 git clone https://github.com/PotatoOfPotato/dsh-plugin-delete-session
 ```
 
-Then in `<DSH_HOME>/profiles/<profile>/`:
-
-**1.** Add the dependency and select the bundle in `package.json`:
+Then in `<DSH_HOME>/profiles/<profile>/`, add the dependency and the bundle in one edit of `package.json`:
 
 ```json
 {
@@ -85,11 +120,14 @@ Then in `<DSH_HOME>/profiles/<profile>/`:
 }
 ```
 
-**2.** Install and restart:
+Then install the link and restart:
 
 ```sh
 pnpm install --dir <DSH_HOME>/profiles/<profile>
 ```
+
+### After installing — confirm it took
+The delete row only appears once the plugin is both installed and selected. Check **Plugins**: it should be listed under **Installed** with its own switch, *not* folded into the **Official** group. If it is missing there, the bundle is not selected yet — add its name to `dsh.profile.bundles` in the profile's `package.json` (see any install path above) and restart.
 
 `<DSH_HOME>` defaults to `~/.dsh` (`%USERPROFILE%\.dsh` on Windows).
 
