@@ -1,13 +1,104 @@
-# Nothing here is a build input for this plugin: lib/*.js are hand-written
-# sources shipped as-is, so there is no dist/ to ignore. These entries cover
-# incidental local state only.
+# ─────────────────────────────────────────────────────────────────────────────
+# Secrets — never commit credentials of any kind.
+#
+# This plugin needs no credential at all: it authenticates with the DSH page's
+# own same-origin session cookie. Nothing below should ever exist in this repo;
+# the rules are here so a stray local file cannot slip into a commit.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Environment files (keep the checked-in examples)
+.env
+.env.*
+!.env.example
+!*.env.example
+
+# Keys, certificates, keystores
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.ppk
+*.asc
+*.gpg
+id_rsa
+id_ed25519
+id_ecdsa
+
+# Credential / token / secret stores by name, wherever they sit
+*.token
+*.tokens
+*.secret
+*.secrets
+*.credentials
+*.credential
+*credentials*.json
+credentials.json
+credentials.yml
+credentials.yaml
+.netrc
+.npmrc
+.pypirc
+.authinfo
+secrets.json
+secrets.yml
+secrets.yaml
+service-account*.json
+token.json
+tokens.json
+
+# DSH's own credential store, should anyone copy one in by accident
+.credentials.yaml
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Runtime and generated data
+# ─────────────────────────────────────────────────────────────────────────────
 
 node_modules/
 pnpm-lock.yaml
+pnpm-debug.log*
 
-# Editors / OS
+# Logs, crash reports, dumps
+*.log
+logs/
+crash-*.log
+*.stackdump
+core.[0-9]*
+hs_err_pid*.log
+replay_pid*.log
+
+# Local databases and caches
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+.cache/
+.tmp/
+tmp/
+
+# DSH profile / session residue, should the repo ever be cloned into one
+storages/
+sessions/
+sessions-*/
+session.v*.jsonl*
+.attachments/
+attachments/
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Editors and operating systems
+# ─────────────────────────────────────────────────────────────────────────────
+
 .vscode/
 .idea/
+*.iml
+*.swp
+*.swo
+*~
+.DS_Store
 Thumbs.db
 Desktop.ini
-*.log
+desktop.ini
+$RECYCLE.BIN/
