@@ -25,6 +25,7 @@ DSH can archive a session but never delete one. `archiveSession` is the only ses
 - [What a delete removes](#what-a-delete-removes)
 - [Safety rules](#safety-rules)
 - [Permissions and data access](#permissions-and-data-access)
+- [Compatibility with DSH releases](#compatibility-with-dsh-releases)
 - [Disable or uninstall](#disable-or-uninstall)
 - [How it works](#how-it-works)
 - [HTTP interface](#http-interface)
@@ -37,7 +38,8 @@ DSH can archive a session but never delete one. `archiveSession` is the only ses
 
 | | |
 |---|---|
-| **DSH** | A profile that mounts `@deepseek-ai/dsh-host-webserver` and the session-menu slot — the shipped `desktop` and `web` profiles both qualify. |
+| **DSH** | `>=0.2.0-rc.2 <0.3.0` — declared as a peer dependency, so an unverified release is refused instead of loaded (see [Compatibility](#compatibility-with-dsh-releases)). |
+| **Profile** | Must mount `@deepseek-ai/dsh-host-webserver` and the session-menu slot — the shipped `desktop` and `web` profiles both qualify. |
 | **Node** | None extra. The package has **no dependencies and no build step**; `lib/*.js` are the shipped sources. |
 | **Credentials** | None. It authenticates with the DSH page's own same-origin session cookie. |
 
@@ -127,6 +129,37 @@ A plugin runs with your user's privileges, so here is exactly what this one touc
 - **Makes no outbound request.** The only HTTP traffic is the browser posting a session id to the plugin's own route on the DSH origin.
 - **Stores no credential and no state.** No API key, no token, no config file, no telemetry.
 - **Logs no session content.** Errors name the session id and the failed artifact, never message text.
+
+## Compatibility with DSH releases
+
+DSH gates bundles on `peerDependencies`: every `@deepseek-ai/dsh*` peer is checked against the running version, and an unsatisfied one refuses to load (or install) with an `incompatible-version` result that offers either a downgrade or an explicit per-version exemption. This package therefore declares:
+
+```json
+"peerDependencies": { "@deepseek-ai/dsh": ">=0.2.0-rc.2 <0.3.0" }
+```
+
+So on an unverified release DSH stops rather than silently loading something that may have drifted. Note the range spelling: `^0.2.0` does **not** match a prerelease like `0.2.0-rc.2` under semver, which is why the range is written out.
+
+The range is deliberately narrow because not every surface this plugin touches is equally stable. In rough order of durability:
+
+**Built on stable public primitives — expected to survive most releases**
+
+- Registering an exact Web route through `ctx.webServer.register`, and answering it with Node's `http` request/response objects.
+- Removing files with `node:fs/promises`, with the paths derived from `<DSH_HOME>`.
+- The browser half's bundle format, `window.__ModuleLoader__.load({ id, factory })`, which `dsh-client-modules` documents as the contract for a served bundle.
+
+**Extension points — stable in intent, but names can move in a refactor**
+
+- The slot `sidebar.workspaces.session.menu.item` and the props it hands a row (`sessionId`, `displayTitle`, `useMenuOpenState`, `t`). A **silent** failure mode: rename the slot and the row simply never appears, with nothing in the UI explaining why. A rename also leaves the slot's own `id` free for another occupant, so there is no collision error to notice.
+- The forwarded Host event `api-session/removed`, which is what makes the sidebar drop the row. Rename it and the delete still happens, but the row stays on screen and the next attempt reports a confusing `session/not-found` — a loud-but-misleading failure.
+- The `ctx.slots` registration verbs and the `dsh.client` / `dsh.bundle` manifest declarations.
+
+**Storage layout — the most likely thing to need an update**
+
+- The session directory and its log file names (`<DSH_HOME>/sessions/<encoded-cwd>/<session-id>/session.v<format>.jsonl.zstd`). DSH version-stamps session formats and may add a successor generation; this plugin removes the whole session directory, so a new generation inside it is still deleted, but a future layout that stops using a per-session directory would break the scan.
+- `<DSH_HOME>/storages/session_projcache/sessions/<id>.json` and the `sessionIds` / `archivedSessionIds` / `pinnedSessionIds` fields of `<DSH_HOME>/storages/workspace.json`.
+
+If a future release moves something here, the fix is local to `lib/index.js`: the artifact locations are named once, near the top of `deleteSession`, rather than scattered through the file.
 
 ## Disable or uninstall
 
