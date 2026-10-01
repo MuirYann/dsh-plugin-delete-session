@@ -253,4 +253,4 @@ A client-half failure is visible in the shell's crash reports under `%APPDATA%/@
 
 ## License
 
-MIT
+[MIT](LICENSE)
